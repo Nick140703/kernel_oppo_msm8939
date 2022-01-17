@@ -461,7 +461,6 @@ int opchg_backup_ocv_soc(int soc)
 	return the_chip->last_ocv_uv;
 }
 #endif
-
 static int get_current_time(unsigned long *now_tm_sec)
 {
 	struct rtc_time tm;
@@ -3567,6 +3566,53 @@ static int set_battery_data(struct qpnp_bms_chip *chip)
 				return -EINVAL;
 			}
 		}
+} else if(is_project(OPPO_15399))
+	{
+		rc = opchg_get_bq2022_manufacture_id();
+		if(rc < 0){
+			pr_err("%s get bq2022 manu id fail\n",__func__);
+			return -EPROBE_DEFER;
+		} 
+		else if(rc == BATTERY_2420MAH_SDI)
+		{
+			node = of_find_node_by_name(chip->spmi->dev.of_node,
+						"qcom,battery-data-sdi");
+			if (!node) {
+				pr_err("No available atl batterydata\n");
+				return -EINVAL;
+			}
+		} else if(rc == BATTERY_2550MAH_SDI)
+		{
+			node = of_find_node_by_name(chip->spmi->dev.of_node,
+						"qcom,battery-data-high-sdi");
+			if (!node) {
+				pr_err("No available high-sdi batterydata\n");
+				return -EINVAL;
+			}
+		} else if(rc == BATTERY_2550MAH_LG)
+		{
+			node = of_find_node_by_name(chip->spmi->dev.of_node,
+						"qcom,battery-data-high-lg");
+			if (!node) {
+				pr_err("No available high-lg batterydata\n");
+				return -EINVAL;
+			}
+		} else if(rc == BATTERY_2550MAH_ATL)
+		{
+			node = of_find_node_by_name(chip->spmi->dev.of_node,
+						"qcom,battery-data-high-atl");
+			if (!node) {
+				pr_err("No available high-atl batterydata\n");
+				return -EINVAL;
+			}
+		} else if(rc == BATTERY_2420MAH_ATL)
+		{
+			node = of_find_node_by_name(chip->spmi->dev.of_node,
+						"qcom,battery-data-atl");
+			if (!node) {
+				pr_err("No available atl batterydata\n");
+				return -EINVAL;
+			}
 	} else {
 		node = of_find_node_by_name(chip->spmi->dev.of_node,
 					"qcom,battery-data");

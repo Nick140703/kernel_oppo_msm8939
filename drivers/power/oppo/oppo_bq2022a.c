@@ -44,6 +44,8 @@
 #define DEVICE_BATTERY_ID_TYPE_LG		"LG"
 
 
+
+
 #define OPPO_BATTERY_ENCRPTION
 static bool oppo_high_battery_status = 1;
 static int oppo_check_ID_status = 0;
@@ -469,6 +471,12 @@ void CheckIDCompare(void)
 #define  ATL_VOLATGE  	1800
 #define  LG_VOLATGE  	1200
 #define  SDI_VOLATGE  	200
+#define  ATL_4V35_VOLATGE  	1450
+#define  ATL_4V4_VOLATGE  	1110
+#define  LG_4V4_VOLATGE  	790
+#define  SDI_4V4_VOLATGE  	530
+#define  SDI_4V35_VOLATGE  	300
+
 
 int opchg_get_bq2022_manufacture_id(void)
 {
@@ -514,6 +522,59 @@ int opchg_get_bq2022_manufacture_id(void)
 			}
 			return batt_manufac_id;
 		}
+	}
+	if(is_project(OPPO_15399))
+	{
+		oppo_high_battery_status = 1;
+		oppo_battery_status_init_flag = 1;
+		
+		if(opchg_chip == NULL)
+		{
+			return -EPROBE_DEFER;
+		}
+		else
+		{
+	        bq2202a_gpio = opchg_get_prop_battery_id_voltage(opchg_chip);
+			pr_debug("MPP4 battery id volatge is V_battery_id=%d,V_battery=%d\n", bq2202a_gpio,rc);
+
+			if(bq2202a_gpio < 0)
+			{
+				pr_debug("MPP4 battery id volatge is fail\n");
+				return -EPROBE_DEFER;
+			}
+			if(bq2202a_gpio <= SDI_4V35_VOLATGE)
+			{
+				batt_manufac_id = BATTERY_2420MAH_SDI;
+				register_device_proc("battery_id", "4.35V", DEVICE_BATTERY_ID_TYPE_SDI);
+			}
+			else if(bq2202a_gpio <= SDI_4V4_VOLATGE)
+			{
+				batt_manufac_id = BATTERY_2550MAH_SDI;
+				register_device_proc("battery_id", "4.40V", DEVICE_BATTERY_ID_TYPE_SDI);
+			}
+			else if(bq2202a_gpio <= LG_4V4_VOLATGE)
+			{
+				batt_manufac_id = BATTERY_2550MAH_LG;
+				register_device_proc("battery_id", "4.40V", DEVICE_BATTERY_ID_TYPE_LG);
+			}
+			else if(bq2202a_gpio <= ATL_4V4_VOLATGE) 
+			{
+				batt_manufac_id = BATTERY_2550MAH_ATL;
+				register_device_proc("battery_id", "4.40V", DEVICE_BATTERY_ID_TYPE_ATL);
+			}
+			else if(bq2202a_gpio <= ATL_4V35_VOLATGE) 
+			{
+				batt_manufac_id = BATTERY_2420MAH_ATL;
+				register_device_proc("battery_id", "4.35V", DEVICE_BATTERY_ID_TYPE_ATL);
+			}
+	              else 
+			{
+				batt_manufac_id = BATTERY_2420MAH_ATL;
+				register_device_proc("battery_id", DEVICE_BATTERY_ID_VERSION, DEVICE_BATTERY_ID_TYPE_ATL);
+			}
+			return batt_manufac_id;
+		}
+		#endif 
 	}
 
 	if(!oppo_battery_status_init_flag)
@@ -575,6 +636,11 @@ bool oppo_battery_status_init(int batt_id_gpio)
 	*****************************************************************/
 	if(is_project(OPPO_15109))
 	{
+		oppo_high_battery_status = 1;
+		oppo_battery_status_init_flag = 1;
+	}
+	else if(is_project(OPPO_15399))
+	{		
 		oppo_high_battery_status = 1;
 		oppo_battery_status_init_flag = 1;
 	}
